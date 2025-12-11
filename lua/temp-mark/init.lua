@@ -1,15 +1,30 @@
 local M = {}
 
+local defaults = {
+	-- The letter used when the plugin creates a mark.
+	mark_letter = "M",
+
+	-- Whether the plugin should show informational alerts. These are shown upon creating a mark and jumping back to one.
+	show_alerts = false,
+
+	-- Whether jumping back to a temporary mark should jump to the same column where the mark was made.
+	return_to_mark_column = true,
+
+	-- The keybinds for the plugin.
+	keybinds = {
+		-- The keybind for creating a temporary mark in normal mode.
+		create_temp_mark = "mm",
+
+		-- The keybind for jumping back to a temporary mark in normal mode.
+		move_to_temp_mark = "Mm",
+	},
+}
+
 function M.setup(opts)
 	-- Initialize the opts variable with the options passed
-	-- by the plugin user in the setup function
-	opts.mark_letter = opts.mark_letter or "M"
-	opts.show_alerts = opts.show_alerts or false
-	opts.return_to_mark_column = opts.return_to_mark_column or true
-
-	opts.keybinds = opts.keybinds or { create_temp_mark = "mm", move_to_temp_mark = "Mm" }
-	opts.keybinds.create_temp_mark = opts.keybinds.create_temp_mark or "mm"
-	opts.keybinds.move_to_temp_mark = opts.keybinds.move_to_temp_mark or "Mm"
+	-- by the plugin user in the setup function. Add default
+	-- values for those not explicitly passed.
+	opts = vim.tbl_deep_extend("keep", opts or {}, defaults)
 
 	-- Initialize a keymap for normal mode when "mm" is pressed
 	-- This creates the temporary mark.
@@ -20,8 +35,10 @@ function M.setup(opts)
 		-- Get the current position of the cursor for creating the mark
 		local cursor_position = vim.api.nvim_win_get_cursor(0)
 
+		-- Create the mark in the current buffer at the cursor position
 		vim.api.nvim_buf_set_mark(current_buffer, opts.mark_letter, cursor_position[1], cursor_position[2], {})
 
+		-- Show an alert if the option is enabled
 		if opts.show_alerts then
 			print("temp-mark.nvim: Temp mark created on line " .. cursor_position[1])
 		end
@@ -53,6 +70,7 @@ function M.setup(opts)
 		-- Delete the temporary mark
 		vim.api.nvim_del_mark(opts.mark_letter)
 
+		-- Show an alert if the option is enabled
 		if opts.show_alerts then
 			print("temp-mark.nvim: Returned to temporary mark")
 		end
